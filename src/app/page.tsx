@@ -29,7 +29,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: `Tell me three dates that shifted ${stockSymbol} stocks and why it shifted in the last 3 months` }),
+        body: JSON.stringify({ query: `Tell me three dates that shifted ${stockSymbol} stocks and why it shifted in the last 3 months. Give me a link to a news article about it and about 50 characters.` }),
       });
 
       const data = await response.json();
