@@ -1,12 +1,51 @@
-import Image from "next/image";
+"use client"; // Add this line at the top
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { fetchStockNews } from '../../utils/index';
 
 export default function Home() {
+  const [phrases, setPhrases] = useState<string[]>([]);
+  const [stockSymbol, setStockSymbol] = useState<string>('');
+  const [apiResponse, setApiResponse] = useState<string>('');
+
+  useEffect(() => {
+    async function getData() {
+      const data = await fetchStockNews();
+      setPhrases(data);
+    }
+    // getData();
+  }, []);
+
+  function getRandomPosition() {
+    const top = Math.floor(Math.random() * 80) + 10; // random position from 10% to 90%
+    const left = Math.floor(Math.random() * 80) + 10; // random position from 10% to 90%
+    return { top: `${top}%`, left: `${left}%` };
+  }
+
+  async function handleSubmit() {
+    try {
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: `Tell me three dates that shifted ${stockSymbol} stocks and why it shifted in the last 3 months` }),
+      });
+
+      const data = await response.json();
+      setPhrases(data.news)
+      // setApiResponse(data.answer);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
+          <code className="font-mono font-bold">src/pages/index.js</code>
         </p>
         <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
           <a
@@ -103,11 +142,50 @@ export default function Home() {
               -&gt;
             </span>
           </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
+          <p className="m-0 max-w-[30ch] text-sm opacity-50">
             Instantly deploy your Next.js site to a shareable URL with Vercel.
           </p>
         </a>
       </div>
+
+      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
+        <input
+          type="text"
+          value={stockSymbol}
+          onChange={(e) => setStockSymbol(e.target.value)}
+          placeholder="Enter stock symbol"
+          className="mb-4 p-2 border rounded"
+        />
+        <button
+          onClick={handleSubmit}
+          className="p-2 bg-blue-500 text-white rounded"
+        >
+          Submit
+        </button>
+        {apiResponse && (
+          <div className="mt-4 p-4 border rounded bg-gray-100">
+            <h3 className="font-semibold">API Response:</h3>
+            <p>{apiResponse}</p>
+          </div>
+        )}
+      </div>
+
+      {phrases.map((phrase, index) => (
+        <div
+          key={index}
+          style={{
+            position: 'absolute',
+            ...getRandomPosition(),
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            padding: '10px',
+            borderRadius:   '5px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+            zIndex: 10,
+          }}
+        >
+          {phrase}
+        </div>
+      ))}
     </main>
   );
 }
