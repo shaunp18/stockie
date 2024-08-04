@@ -17,3 +17,14 @@ export async function fetchStockNews(ticker: string, date: []) {
   const text = response.text()
   return text.split('\n').filter(phrase => phrase.trim() !== ''); // Split by newline and filter out empty strings
 }
+
+export async function fetchStockNews2(ticker: string, date: []) {
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const prompt = `repeat ${ticker} company rxactly back to me `;
+
+  const result = await model.generateContent(prompt);
+  
+  const response = result.response;
+  const text = response.text()
+  return text
+}

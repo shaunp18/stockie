@@ -1,10 +1,10 @@
 "use client"; // Add this line at the top
-import { useState } from 'react';
-import 'chart.js/auto';
-import { Line } from 'react-chartjs-2';
-import axios from 'axios';
-import Image from 'next/image';
-import theimg from './logo.png';
+import { useState } from "react";
+import "chart.js/auto";
+import { Line } from "react-chartjs-2";
+import axios from "axios";
+import Image from "next/image";
+import theimg from "./logo.png";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,8 +13,8 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
-} from 'chart.js';
+  Legend,
+} from "chart.js";
 
 ChartJS.register(
   Title,
@@ -27,13 +27,36 @@ ChartJS.register(
 );
 
 export default function Home() {
-  const [stockSymbol, setStockSymbol] = useState('');
+  const [stockSymbol, setStockSymbol] = useState("");
   const [chartDisplayData, setChartDisplayData] = useState<any>(null);
+  async function getImageUrl(prompt: string) {
+    var apiKey = "AIzaSyB41BZPIS7OSfBj81rbh1HjMdsiAYr_ATk";
+    var searchEngineId = "41624844768c14c9a";
+    var query = prompt; // This could be a static query or based on the prompt/content
+    var url =
+      "https://www.googleapis.com/customsearch/v1?key=" +
+      apiKey +
+      "&cx=" +
+      searchEngineId +
+      "&searchType=image&q=" +
+      encodeURIComponent(query);
 
+    var response = await axios.get(url);
+    var results = response.data;
+
+    if (results.items && results.items.length > 0) {
+      console.log(results.items[0].link);
+      return results.items[0].link; // Return the first image's URL
+    } else {
+      console.log("logo");
+      return "https://cdn.discordapp.com/attachments/1208274732227764264/1208595162914103376/logo-no-background.png?ex=65e3daf5&is=65d165f5&hm=4d088d6dd1e4fb2cb3e9d75785f38efe79888a31a8d523724e00af838ff36143&"; // Return null if no images found
+    }
+  }
   async function handleSubmit() {
     try {
-      
-      const chartResponse = await fetch(`http://127.0.0.1:5000/historical_prices?ticker=${stockSymbol}`);
+      const chartResponse = await fetch(
+        `http://127.0.0.1:5000/historical_prices?ticker=${stockSymbol}`
+      );
       const chartData = await chartResponse.json();
 
       const dates = chartData[0];
@@ -51,26 +74,34 @@ export default function Home() {
         const pastPrice = prices[i - windowSize];
         const currentPrice = prices[i];
         const delta = (currentPrice - pastPrice) / pastPrice;
-        
+
         if (Math.abs(delta) > threshold) {
           changes.push({
             index: i - windowSize,
             x: dates[i - windowSize],
             y: pastPrice,
-            delta: delta
+            delta: delta,
           });
           date.push(dates[i - windowSize]);
-          i = i + minDistance
+          i = i + minDistance;
         }
       }
 
-      console.log("THE DATE:", date)
-      const news = await axios.post('/api/gemini', {stockSymbol, date});
-      console.log("The news")
+      console.log("THE DATE:", date);
+      const news = await axios.post("/api/gemini", { stockSymbol, date });
+      const images: { data: { news: string } } = await axios.post(
+        "/api/images",
+        { stockSymbol, date }
+      );
+
+      const realImages = getImageUrl(images.data.news);
+
+      console.log(realImages);
+      console.log("The news");
       console.log(news);
-      console.log("The news.data")
+      console.log("The news.data");
       console.log(news.data);
-      console.log("The news.data.news")
+      console.log("The news.data.news");
       console.log(news.data.news);
 
       // Sort significant changes by absolute delta and filter out close points
@@ -81,69 +112,76 @@ export default function Home() {
       //     if (index === 0) return true;
       //     return (point.index - arr[index - 1].index) >= minDistance;
       //   })
-        // .slice(0, 4); // Limit to 3-4 significant points
+      // .slice(0, 4); // Limit to 3-4 significant points
 
       setChartDisplayData({
         labels: dates,
         datasets: [
           {
             label: `${stockSymbol} Stock Price`,
-            backgroundColor: 'rgba(59, 130, 246, 0.5)',
-            borderColor: 'rgba(59, 130, 246, 0.9)',
+            backgroundColor: "rgba(59, 130, 246, 0.5)",
+            borderColor: "rgba(59, 130, 246, 0.9)",
             data: prices,
             pointBackgroundColor: dates.map((_: any, i: any) =>
-              changes.find(point => point.index === i) ? (changes.find(point => point.index === i)!.delta > 0 ? 'rgb(68, 246, 59)' : 'red') : 'rgba(75, 192, 192, 0.6)'
+              changes.find((point) => point.index === i)
+                ? changes.find((point) => point.index === i)!.delta > 0
+                  ? "rgb(68, 246, 59)"
+                  : "red"
+                : "rgba(75, 192, 192, 0.6)"
             ),
-            pointRadius: dates.map((_: any, i: any) =>
-              changes.find(point => point.index === i) ? 5 : 0 // Show only significant points
+            pointRadius: dates.map(
+              (_: any, i: any) =>
+                changes.find((point) => point.index === i) ? 5 : 0 // Show only significant points
             ),
-            pointHoverRadius: 10 // Increase hover size for better visibility
-          }
-        ]
+            pointHoverRadius: 10, // Increase hover size for better visibility
+          },
+        ],
       });
 
       // Attach significant points data to chart options
-      
-      console.log("The good points are:", dates)
+
+      console.log("The good points are:", dates);
 
       const chartOptions = {
         plugins: {
           tooltip: {
             callbacks: {
-              label: function(tooltipItem: any) {
-                const point = changes.find((p: any) => p.index === tooltipItem.dataIndex);
+              label: function (tooltipItem: any) {
+                const point = changes.find(
+                  (p: any) => p.index === tooltipItem.dataIndex
+                );
                 if (point) {
-                    // Increment thevar each time the condition is met
-                  console.log(point.x)
-                  console.log(news.data.news)
+                  // Increment thevar each time the condition is met
+                  console.log(point.x);
+                  console.log(news.data.news);
 
-                  let theanswer = "N/A"
+                  let theanswer = "N/A";
 
                   for (const thing in news.data.news) {
                     if (news.data.news[thing].includes(point.x)) {
-                      theanswer = news.data.news[thing]
+                      theanswer = news.data.news[thing];
                     }
                   }
-                      // Change: ${(point.delta * 100).toFixed(2)}%,
-                  return `Price: ${tooltipItem.raw.toFixed(2)},  News: ${theanswer}`;
+                  // Change: ${(point.delta * 100).toFixed(2)}%,
+                  return `Price: ${tooltipItem.raw.toFixed(
+                    2
+                  )},  News: ${theanswer}`;
                 }
                 return `Price: ${tooltipItem.raw.toFixed(2)}`;
-              }
-            }
-          }
-        }
+              },
+            },
+          },
+        },
       };
 
       setChartDisplayData((prevState: any) => ({
         ...prevState,
-        options: chartOptions
+        options: chartOptions,
       }));
-
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     }
   }
-
 
   /* <Image
   src={theimg}
@@ -155,19 +193,19 @@ export default function Home() {
   // blurDataURL="data:..." automatically provided
   // placeholder="blur" // Optional blur-up while loading/> */
 
-
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center justify-between p-24" id='large-it'>
-        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto" id="cont-it">
-
+      <main
+        className="flex min-h-screen flex-col items-center justify-between p-24"
+        id="large-it"
+      >
+        <div
+          className="flex flex-col items-center justify-center w-full max-w-md mx-auto"
+          id="cont-it"
+        >
           <div id="the-div">
             <h4 id="title">StockSee</h4>
-            
-          
-            
           </div>
-          
 
           <input
             type="text"
@@ -185,7 +223,9 @@ export default function Home() {
           </button>
         </div>
 
-        {chartDisplayData && <Line data={chartDisplayData} options={chartDisplayData.options} />}
+        {chartDisplayData && (
+          <Line data={chartDisplayData} options={chartDisplayData.options} />
+        )}
       </main>
     </>
   );
