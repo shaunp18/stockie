@@ -177,14 +177,14 @@ export default function Home() {
         >
           <div id="the-div">
             <h4 id="title">StockSee</h4>
-            <Image
+            {/* <Image
               src={theimg}
               id="the-img"
               alt="Logo"
               width={100}
               height={100}
               max-height={100}
-            />
+            /> */}
           </div>
 
           <input
