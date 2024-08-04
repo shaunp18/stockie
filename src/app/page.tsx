@@ -1,34 +1,65 @@
 "use client"; // Add this line at the top
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { fetchStockNews } from '../../utils/index';
+import 'chart.js/auto'
+import React, { Component } from 'react';
+import { Bar, Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarController,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  BarController
+);
 
 export default function Home() {
   const [phrases, setPhrases] = useState<string[]>([]);
   const [stockSymbol, setStockSymbol] = useState<string>('');
-  const [apiResponse, setApiResponse] = useState<string>('');
-
-  useEffect(() => {
-    async function getData() {
-      const data = await fetchStockNews();
-      setPhrases(data);
-    }
-    // getData();
-  }, []);
+  const [apiResponse, setApiResponse] = useState<any>(null);
+  const [chartDisplayData, setChartDisplayData] = useState<any>(null);
 
 
   async function handleSubmit() {
     try {
-      const response = await fetch('/api/gemini', {
+      const chartResponse = await fetch("http://localhost:5000/historical_prices?ticker=" + stockSymbol)
+      const chartData = await chartResponse.json()
+      setApiResponse(chartData)
+      setChartDisplayData({
+        labels: chartData[0],
+        datasets: [
+          {
+            label: 'Data Series 1',
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            data: chartData[1],
+          },
+        ],
+      });
+
+      const newsResponse = await fetch('/api/gemini', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query: `Tell me three dates that shifted ${stockSymbol} stocks and why it shifted in the last 3 months. Give me a link to a news article about it and about 50 characters.` }),
+        body: JSON.stringify({ query: stockSymbol }),
       });
 
-      const data = await response.json();
+      const data = await newsResponse.json();
       setPhrases(data.news)
+      console.log(data.news)
       // setApiResponse(data.answer);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -36,32 +67,33 @@ export default function Home() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      
+    <>
+      <main className="flex min-h-screen flex-col items-center justify-between p-24">
 
-      <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
-        <input
-          type="text"
-          value={stockSymbol}
-          onChange={(e) => setStockSymbol(e.target.value)}
-          placeholder="Enter stock symbol"
-          className="mb-4 p-2 border rounded"
-        />
-        <button
-          onClick={handleSubmit}
-          className="p-2 bg-blue-500 text-white rounded"
-        >
-          Submit
-        </button>
-        {apiResponse && (
+
+        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
+          <input
+            type="text"
+            value={stockSymbol}
+            onChange={(e) => setStockSymbol(e.target.value)}
+            placeholder="Enter stock symbol"
+            className="mb-4 p-2 border rounded"
+          />
+          <button
+            onClick={handleSubmit}
+            className="p-2 bg-blue-500 text-white rounded"
+          >
+            Submit
+          </button>
+          {/* {apiResponse && (
           <div className="mt-4 p-4 border rounded bg-gray-100">
             <h3 className="font-semibold">API Response:</h3>
             <p>{apiResponse}</p>
-          </div>
-        )}
-      </div>
+          </div> */}
+          {/* )} */}
+        </div>
 
-      {phrases.map((phrase, index) => (
+        {/* {phrases.map((phrase, index) => (
         <div
           key={index}
           style={{
@@ -75,7 +107,14 @@ export default function Home() {
         >
           {phrase}
         </div>
-      ))}
-    </main>
+      ))} */}
+{
+  chartDisplayData && 
+<Line data={chartDisplayData} />
+}
+    
+
+      </main>
+    </>
   );
 }
