@@ -3,6 +3,8 @@ import { useState } from 'react';
 import 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
+import Image from 'next/image';
+import theimg from './logo.png';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -86,11 +88,11 @@ export default function Home() {
         datasets: [
           {
             label: `${stockSymbol} Stock Price`,
-            backgroundColor: 'rgba(75, 192, 192, 0.6)',
-            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+            borderColor: 'rgba(59, 130, 246, 0.9)',
             data: prices,
             pointBackgroundColor: dates.map((_: any, i: any) =>
-              changes.find(point => point.index === i) ? (changes.find(point => point.index === i)!.delta > 0 ? 'green' : 'red') : 'rgba(75, 192, 192, 0.6)'
+              changes.find(point => point.index === i) ? (changes.find(point => point.index === i)!.delta > 0 ? 'rgb(68, 246, 59)' : 'red') : 'rgba(75, 192, 192, 0.6)'
             ),
             pointRadius: dates.map((_: any, i: any) =>
               changes.find(point => point.index === i) ? 5 : 0 // Show only significant points
@@ -122,10 +124,10 @@ export default function Home() {
                       theanswer = news.data.news[thing]
                     }
                   }
-
-                  return `Price: ${tooltipItem.raw}, Change: ${(point.delta * 100).toFixed(2)}%, News: ${theanswer}`;
+                      // Change: ${(point.delta * 100).toFixed(2)}%,
+                  return `Price: ${tooltipItem.raw.toFixed(2)},  News: ${theanswer}`;
                 }
-                return `Price: ${tooltipItem.raw}`;
+                return `Price: ${tooltipItem.raw.toFixed(2)}`;
               }
             }
           }
@@ -142,10 +144,31 @@ export default function Home() {
     }
   }
 
+
+  /* <Image
+  src={theimg}
+  id="the-img"
+  alt="Picture of the author"
+  width={100} 
+  height={100}
+  max-height={100}
+  // blurDataURL="data:..." automatically provided
+  // placeholder="blur" // Optional blur-up while loading/> */
+
+
   return (
     <>
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto">
+      <main className="flex min-h-screen flex-col items-center justify-between p-24" id='large-it'>
+        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto" id="cont-it">
+
+          <div id="the-div">
+            <h4 id="title">StockSee</h4>
+            
+          
+            
+          </div>
+          
+
           <input
             type="text"
             value={stockSymbol}
@@ -155,6 +178,7 @@ export default function Home() {
           />
           <button
             onClick={handleSubmit}
+            id="submit-btn"
             className="p-2 bg-blue-500 text-white rounded"
           >
             Submit
