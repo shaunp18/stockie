@@ -30,6 +30,7 @@ export default function Home() {
 
   async function handleSubmit() {
     try {
+      
       const chartResponse = await fetch(`http://127.0.0.1:5000/historical_prices?ticker=${stockSymbol}`);
       const chartData = await chartResponse.json();
 
@@ -60,8 +61,15 @@ export default function Home() {
           i = i + minDistance
         }
       }
+
+      console.log("THE DATE:", date)
       const news = await axios.post('/api/gemini', {stockSymbol, date});
+      console.log("The news")
       console.log(news);
+      console.log("The news.data")
+      console.log(news.data);
+      console.log("The news.data.news")
+      console.log(news.data.news);
 
       // Sort significant changes by absolute delta and filter out close points
       // const filteredPoints = changes
@@ -93,6 +101,9 @@ export default function Home() {
       });
 
       // Attach significant points data to chart options
+      
+      console.log("The good points are:", dates)
+
       const chartOptions = {
         plugins: {
           tooltip: {
@@ -100,7 +111,19 @@ export default function Home() {
               label: function(tooltipItem: any) {
                 const point = changes.find((p: any) => p.index === tooltipItem.dataIndex);
                 if (point) {
-                  return `Price: ${tooltipItem.raw}, Change: ${(point.delta * 100).toFixed(2)}%`;
+                    // Increment thevar each time the condition is met
+                  console.log(point.x)
+                  console.log(news.data.news)
+
+                  let theanswer = "N/A"
+
+                  for (const thing in news.data.news) {
+                    if (news.data.news[thing].includes(point.x)) {
+                      theanswer = news.data.news[thing]
+                    }
+                  }
+
+                  return `Price: ${tooltipItem.raw}, Change: ${(point.delta * 100).toFixed(2)}%, News: ${theanswer}`;
                 }
                 return `Price: ${tooltipItem.raw}`;
               }
