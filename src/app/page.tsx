@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import 'chart.js/auto';
 import { Line } from 'react-chartjs-2';
+import axios from 'axios';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,6 +43,7 @@ export default function Home() {
       const minDistance = 30; // Minimum distance between significant points (number of days)
 
       const changes: any[] = [];
+      const date: any[] = [];
       for (let i = windowSize; i < prices.length; i++) {
         const pastPrice = prices[i - windowSize];
         const currentPrice = prices[i];
@@ -54,18 +56,21 @@ export default function Home() {
             y: pastPrice,
             delta: delta
           });
+          date.push(dates[i - windowSize]);
           i = i + minDistance
         }
       }
+      const news = await axios.post('/api/gemini', {stockSymbol, date});
+      console.log(news);
 
       // Sort significant changes by absolute delta and filter out close points
-      const filteredPoints = changes
-        .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
-        .filter((point, index, arr) => {
-          // Ensure no close points (minDistance) are included
-          if (index === 0) return true;
-          return (point.index - arr[index - 1].index) >= minDistance;
-        })
+      // const filteredPoints = changes
+      //   .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+      //   .filter((point, index, arr) => {
+      //     // Ensure no close points (minDistance) are included
+      //     if (index === 0) return true;
+      //     return (point.index - arr[index - 1].index) >= minDistance;
+      //   })
         // .slice(0, 4); // Limit to 3-4 significant points
 
       setChartDisplayData({
@@ -77,10 +82,10 @@ export default function Home() {
             borderColor: 'rgba(75, 192, 192, 1)',
             data: prices,
             pointBackgroundColor: dates.map((_: any, i: any) =>
-              filteredPoints.find(point => point.index === i) ? (filteredPoints.find(point => point.index === i)!.delta > 0 ? 'green' : 'red') : 'rgba(75, 192, 192, 0.6)'
+              changes.find(point => point.index === i) ? (changes.find(point => point.index === i)!.delta > 0 ? 'green' : 'red') : 'rgba(75, 192, 192, 0.6)'
             ),
             pointRadius: dates.map((_: any, i: any) =>
-              filteredPoints.find(point => point.index === i) ? 5 : 0 // Show only significant points
+              changes.find(point => point.index === i) ? 5 : 0 // Show only significant points
             ),
             pointHoverRadius: 10 // Increase hover size for better visibility
           }
@@ -93,7 +98,7 @@ export default function Home() {
           tooltip: {
             callbacks: {
               label: function(tooltipItem: any) {
-                const point = filteredPoints.find((p: any) => p.index === tooltipItem.dataIndex);
+                const point = changes.find((p: any) => p.index === tooltipItem.dataIndex);
                 if (point) {
                   return `Price: ${tooltipItem.raw}, Change: ${(point.delta * 100).toFixed(2)}%`;
                 }

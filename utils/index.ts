@@ -5,9 +5,9 @@ dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.API_KEY!);
 
-export async function fetchStockNews(ticker: string) {
+export async function fetchStockNews(ticker: string, date: []) {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-  const prompt = `Tell me three dates that shifted ${ticker} stocks and why it shifted in the last 3 months`;
+  const prompt = `Tell me the reason why ${ticker} stocks shifted on ${date} in the past`;
 
   const result = await model.generateContent(prompt);
   const response = result.response;
