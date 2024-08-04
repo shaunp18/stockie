@@ -29,6 +29,7 @@ ChartJS.register(
 export default function Home() {
   const [stockSymbol, setStockSymbol] = useState("");
   const [chartDisplayData, setChartDisplayData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   async function getImageUrl(prompt: string) {
     var apiKey = "AIzaSyB41BZPIS7OSfBj81rbh1HjMdsiAYr_ATk";
     var searchEngineId = "41624844768c14c9a";
@@ -40,6 +41,7 @@ export default function Home() {
       searchEngineId +
       "&searchType=image&q=" +
       encodeURIComponent(query);
+   // State to track loading
 
     var response = await axios.get(url);
     var results = response.data;
@@ -53,10 +55,9 @@ export default function Home() {
     }
   }
   async function handleSubmit() {
+    setLoading(true); // Start loading
     try {
-      const chartResponse = await fetch(
-        `http://127.0.0.1:5000/historical_prices?ticker=${stockSymbol}`
-      );
+      const chartResponse = await fetch(`http://127.0.0.1:5000/historical_prices?ticker=${stockSymbol}`);
       const chartData = await chartResponse.json();
 
       const dates = chartData[0];
@@ -87,7 +88,6 @@ export default function Home() {
         }
       }
 
-      console.log("THE DATE:", date);
       const news = await axios.post("/api/gemini", { stockSymbol, date });
       const images: { data: { news: string } } = await axios.post(
         "/api/images",
@@ -97,12 +97,6 @@ export default function Home() {
       const realImages = getImageUrl(images.data.news);
 
       console.log(realImages);
-      console.log("The news");
-      console.log(news);
-      console.log("The news.data");
-      console.log(news.data);
-      console.log("The news.data.news");
-      console.log(news.data.news);
 
       // Sort significant changes by absolute delta and filter out close points
       // const filteredPoints = changes
@@ -138,34 +132,20 @@ export default function Home() {
         ],
       });
 
-      // Attach significant points data to chart options
-
-      console.log("The good points are:", dates);
-
       const chartOptions = {
         plugins: {
           tooltip: {
             callbacks: {
               label: function (tooltipItem: any) {
-                const point = changes.find(
-                  (p: any) => p.index === tooltipItem.dataIndex
-                );
+                const point = changes.find((p: any) => p.index === tooltipItem.dataIndex);
                 if (point) {
-                  // Increment thevar each time the condition is met
-                  console.log(point.x);
-                  console.log(news.data.news);
-
                   let theanswer = "N/A";
-
                   for (const thing in news.data.news) {
                     if (news.data.news[thing].includes(point.x)) {
                       theanswer = news.data.news[thing];
                     }
                   }
-                  // Change: ${(point.delta * 100).toFixed(2)}%,
-                  return `Price: ${tooltipItem.raw.toFixed(
-                    2
-                  )},  News: ${theanswer}`;
+                  return `Price: ${tooltipItem.raw.toFixed(2)},  News: ${theanswer}`;
                 }
                 return `Price: ${tooltipItem.raw.toFixed(2)}`;
               },
@@ -179,19 +159,11 @@ export default function Home() {
         options: chartOptions,
       }));
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false); // Stop loading
     }
   }
-
-  /* <Image
-  src={theimg}
-  id="the-img"
-  alt="Picture of the author"
-  width={100} 
-  height={100}
-  max-height={100}
-  // blurDataURL="data:..." automatically provided
-  // placeholder="blur" // Optional blur-up while loading/> */
 
   return (
     <>
@@ -205,6 +177,14 @@ export default function Home() {
         >
           <div id="the-div">
             <h4 id="title">StockSee</h4>
+            <Image
+              src={theimg}
+              id="the-img"
+              alt="Logo"
+              width={100}
+              height={100}
+              max-height={100}
+            />
           </div>
 
           <input
@@ -217,9 +197,16 @@ export default function Home() {
           <button
             onClick={handleSubmit}
             id="submit-btn"
-            className="p-2 bg-blue-500 text-white rounded"
+            className="p-2 bg-blue-500 text-white rounded flex items-center justify-center"
+            disabled={loading} // Disable button while loading
           >
-            Submit
+            {loading ? (
+              <div className="spinner-border text-light" role="status">
+                <span className="sr-only">Loading...</span>
+              </div>
+            ) : (
+              'Submit'
+            )}
           </button>
         </div>
 
