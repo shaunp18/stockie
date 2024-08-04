@@ -26,6 +26,9 @@ ChartJS.register(
   LineElement
 );
 
+
+
+
 export default function Home() {
   const [stockSymbol, setStockSymbol] = useState("");
   const [chartDisplayData, setChartDisplayData] = useState<any>(null);
@@ -52,6 +55,9 @@ export default function Home() {
       return "https://cdn.discordapp.com/attachments/1208274732227764264/1208595162914103376/logo-no-background.png?ex=65e3daf5&is=65d165f5&hm=4d088d6dd1e4fb2cb3e9d75785f38efe79888a31a8d523724e00af838ff36143&"; // Return null if no images found
     }
   }
+
+  const [realImages, setRealImages] = useState(null);
+
   async function handleSubmit() {
     try {
       const chartResponse = await fetch(
@@ -95,6 +101,17 @@ export default function Home() {
       );
 
       const realImages = getImageUrl(images.data.news);
+      realImages.then((url) => {
+        setRealImages(url);
+      });
+
+
+
+
+
+
+
+
 
       console.log(realImages);
       console.log("The news");
@@ -221,7 +238,21 @@ export default function Home() {
           >
             Submit
           </button>
+
+        {realImages ? (
+          <Image
+          src={realImages}
+          alt="Dynamic Image"
+          width={500} // specify dimensions as per your needs
+          height={500}
+        />
+        ): null}
+          
+
         </div>
+
+
+        
 
         {chartDisplayData && (
           <Line data={chartDisplayData} options={chartDisplayData.options} />
