@@ -58,3 +58,21 @@ h4 {
   flex-direction: row;
 }
 
+/* Add this CSS to your styles (e.g., styles/globals.css) */
+.spinner-border {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0.25em solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: currentColor;
+  animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-border.text-light {
+  color: #ffffff;
+}
