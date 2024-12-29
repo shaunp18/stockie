@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Import CORS
 import yfinance as yf
-from datetime import datetime, timedelta
+import json
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -13,12 +13,8 @@ def get_historical_price(ticker):
         # Create a Ticker object
         stock = yf.Ticker(ticker)
 
-        # Define the date range: last 3 months
-        end_date = datetime.today()
-        start_date = end_date - timedelta(days=700)
-
-        # Fetch historical data with weekly increments
-        historical_data = stock.history(start=start_date, end=end_date)
+        # Fetch all available historical data
+        historical_data = stock.history(period="max")
 
         # Limit the data to only the "Date" and "Close" columns
         limited_data = historical_data[['Close']]
@@ -60,6 +56,7 @@ def historical_prices():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 '''

@@ -1,6 +1,6 @@
 
 
-"use client"; // Add this line at the top
+/*"use client"; // Add this line at the top
 import { useState } from "react";
 import "chart.js/auto";
 import { Line } from "react-chartjs-2";

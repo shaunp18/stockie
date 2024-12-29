@@ -15,10 +15,10 @@ def get_historical_price(ticker):
 
         # Define the date range: last 3 months
         end_date = datetime.today()
-        start_date = end_date - timedelta(days=700)
+        start_date = end_date - timedelta(days=365)
 
         # Fetch historical data with weekly increments
-        historical_data = stock.history(start=start_date, end=end_date)
+        historical_data = stock.history(start=start_date, end=end_date, interval="1da")
 
         # Limit the data to only the "Date" and "Close" columns
         limited_data = historical_data[['Close']]
